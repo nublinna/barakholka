@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Все объявления{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Все объявления</h1>
+        <a href="#" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Добавить объявление
+        </a>
+    </div>
+
+    <div class="row">
+        {% for ad in all_ads %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <!-- Картинка объявления -->
+                <div style="height: 200px; overflow: hidden; background-color: #f8f9fa;">
+                    {% if ad.main_image_url %}
+                    <img src="{{ ad.main_image_url }}" class="card-img-top h-100 w-100"
+                         style="object-fit: cover;" alt="{{ ad.title }}">
+                    {% else %}
+                    <div class="h-100 d-flex align-items-center justify-content-center">
+                        <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-body d-flex flex-column">
+                    <!-- Цена -->
+                    <div class="mb-2">
+                        <span class="h4 text-danger fw-bold">{{ ad.price }} ₽</span>
+                    </div>
+
+                    <!-- Заголовок -->
+                    <h5 class="card-title mb-2">
+                        <a href="#" class="text-dark text-decoration-none">{{ ad.title|truncatechars:50 }}</a>
+                    </h5>
+
+                    <!-- Тип и категория -->
+                    <div class="mb-3">
+                        <span class="badge bg-{% if ad.type == 'new' %}success{% else %}warning{% endif %} me-1">
+                            {{ ad.get_type_display }}
+                        </span>
+                        <span class="badge bg-info text-dark">{{ ad.category }}</span>
+                    </div>
+
+                    <!-- Адрес и дата -->
+                    <div class="mt-auto">
+                        <div class="text-muted small mb-2">
+                            <i class="bi bi-geo-alt"></i> {{ ad.address|truncatechars:30 }}
+                        </div>
+                        <div class="text-muted small">
+                            <i class="bi bi-clock"></i> {{ ad.created_at|date:"d.m.Y H:i" }}
+                        </div>
+                    </div>
+
+                    <!-- Кнопка подробнее -->
+                    <a href="#" class="btn btn-outline-primary mt-3">Подробнее</a>
+                </div>
+
+                <!-- Продавец -->
+                <div class="card-footer bg-white border-top-0 pt-0">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-person-circle text-muted me-2"></i>
+                        <small class="text-muted">{{ ad.seller.username }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+                <h3 class="mt-3">Объявлений пока нет</h3>
+                <p class="text-muted">Будьте первым, кто разместит объявление!</p>
+                <a href="#" class="btn btn-primary btn-lg mt-2">
+                    <i class="bi bi-plus-circle"></i> Создать первое объявление
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Пагинация (если нужно будет добавить позже) -->
+    {% if all_ads.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if all_ads.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ all_ads.previous_page_number }}">Назад</a>
+            </li>
+            {% endif %}
+
+            {% for num in all_ads.paginator.page_range %}
+            <li class="page-item {% if all_ads.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+
+            {% if all_ads.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ all_ads.next_page_number }}">Вперед</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<style>
+    .card {
+        border-radius: 12px;
+        border: 1px solid #e8e8e8;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .card-title a:hover {
+        color: #0d6efd !important;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.35em 0.65em;
+    }
+</style>
+{% endblock %}
