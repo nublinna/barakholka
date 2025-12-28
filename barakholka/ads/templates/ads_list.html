@@ -16,13 +16,13 @@
         <div class="col-md-6 col-lg-4 mb-4">
             <div class="card h-100 shadow-sm">
                 <!-- Картинка объявления -->
-                <div style="height: 200px; overflow: hidden; background-color: #f8f9fa;">
-                    {% if ad.main_image_url %}
-                    <img src="{{ ad.main_image_url }}" class="card-img-top h-100 w-100"
-                         style="object-fit: cover;" alt="{{ ad.title }}">
+                <div style="height: 200px; display: block; overflow: hidden;">
+                    {% if ad.main_image %}
+                    <img src="{{ ad.main_image.url }}" alt="{{ ad.title }}" style="width: 100%; height: 100%; display: block; object-fit: cover;">
                     {% else %}
-                    <div class="h-100 d-flex align-items-center justify-content-center">
+                    <div style="height: 200px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
                         <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                        <span class="visually-hidden">Нет изображения</span>
                     </div>
                     {% endif %}
                 </div>
@@ -35,7 +35,7 @@
 
                     <!-- Заголовок -->
                     <h5 class="card-title mb-2">
-                        <a href="#" class="text-dark text-decoration-none">{{ ad.title|truncatechars:50 }}</a>
+                        <a href="{% url 'ads:ad_detail' ad.pk %}" class="text-dark text-decoration-none">{{ ad.title|truncatechars:50 }}</a>
                     </h5>
 
                     <!-- Тип и категория -->
@@ -57,7 +57,7 @@
                     </div>
 
                     <!-- Кнопка подробнее -->
-                    <a href="#" class="btn btn-outline-primary mt-3">Подробнее</a>
+                    <a href="{% url 'ads:ad_detail' ad.pk %}" class="btn btn-outline-primary mt-3">Подробнее</a>
                 </div>
 
                 <!-- Продавец -->

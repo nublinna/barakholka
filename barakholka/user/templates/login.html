@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h1 class="h3 card-title text-center mb-4">Войти в аккаунт</h1>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <div class="form-text">{{ field.help_text }}</div>
+                                {% endif %}
+                                {% for error in field.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-avito btn-lg">Войти</button>
+                        </div>
+                    </form>
+                    <p class="text-center mt-3">
+                        Нет аккаунта? <a href="{% url 'user:signup' %}" class="text-avito-blue">Зарегистрироваться</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .text-avito-blue {
+        color: var(--avito-blue);
+    }
+    .text-avito-blue:hover {
+        color: var(--avito-blue-hover);
+    }
+    .btn-avito {
+        background-color: var(--avito-blue);
+        color: white;
+        border: none;
+    }
+    .btn-avito:hover {
+        background-color: var(--avito-blue-hover);
+        color: white;
+    }
+</style>
+{% endblock %}

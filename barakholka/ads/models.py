@@ -6,7 +6,10 @@ from django.conf import settings
 class Ads(models.Model):
     NEW = 'new'
     USED = 'used'
-    TYPE_CHOICES = [(NEW, 'new'), (USED, 'used')]
+    TYPE_CHOICES = [
+        (NEW, 'Новое'),
+        (USED, 'б/у'),
+    ]
     seller = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -18,7 +21,7 @@ class Ads(models.Model):
     address = models.CharField(max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
     available = models.BooleanField(default=True)
-    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name="Состояние")
     category = models.CharField(max_length=100, help_text='Например: Бытовая техника, Конспекты, Одежда и т.д.')
 
     def __str__(self):

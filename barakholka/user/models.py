@@ -26,7 +26,7 @@ class CustomUserManager(UserManager):
         return super().create_user(username, password, **extra_fields)
 
     def create_superuser(self, username, password, **extra_fields):
-        extra_fields['role'] = self._resolve_role(value='seller')
+        extra_fields['role'] = self._resolve_role(value='Продавец')
         extra_fields['is_superuser'] = True
         extra_fields['is_staff'] = True
 
@@ -40,7 +40,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['role', 'email']
 
     def is_seller(self):
-        return self.role.name == 'seller'
+        return self.role.name == 'Продавец'
 
     def is_buyer(self):
-        return self.role.name == 'buyer'
+        return self.role.name == 'Покупатель'
