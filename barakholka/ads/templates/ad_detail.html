@@ -58,8 +58,27 @@
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
                     <h3 class="card-title text-danger fw-bold mb-3">{{ ad.price }} ₽</h3>
-                    <a href="#" class="btn btn-success btn-lg w-100 mb-2"><i class="bi bi-chat-dots"></i> Связаться с продавцом</a>
-                    <a href="#" class="btn btn-outline-secondary w-100"><i class="bi bi-heart"></i> Добавить в избранное</a>
+                    {% if user.is_authenticated and user == ad.seller %}
+                        <a href="{% url 'ads:ad_edit' ad.id %}" class="btn btn-primary btn-lg w-100 mb-2"><i class="bi bi-pencil-square"></i> Редактировать</a>
+                        <a href="{% url 'ads:ad_delete' ad.id %}" class="btn btn-danger btn-lg w-100 mb-2"><i class="bi bi-trash"></i> Удалить</a>
+                    {% if user.is_authenticated and user != ad.seller %}
+                        <a href="{% url 'chat:create_chat_for_ad' ad.id %}" class="btn btn-success btn-lg w-100 mb-2">
+                            <i class="bi bi-chat-dots"></i> Написать продавцу
+                        </a>
+                    {% endif %}
+                    {% if user.is_authenticated and user != ad.seller %}
+                        {% if ad.is_favorited_by %}
+                            <a href="{% url 'ads:remove_from_favorites' ad.id %}?next={% url 'ads:ads_detail' ad.id %}"
+                               class="btn btn-outline-danger w-100">
+                                <i class="bi bi-heart-fill"></i> Убрать из избранного
+                            </a>
+                        {% else %}
+                            <a href="{% url 'ads:add_to_favorites' ad.id %}"
+                               class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-heart"></i> Добавить в избранное
+                            </a>
+                        {% endif %}
+                    {% endif %}
                 </div>
             </div>
 
@@ -266,5 +285,6 @@
         }
     });
 </script>
+
 {% endblock %}
 {% endblock %}

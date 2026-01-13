@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block title %}Добавить объявление{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm p-4">
+                <h1 class="mb-4">{% if ad %}Редактировать объявление{% else %}Добавить новое объявление{% endif %}</h1>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {% for field in form %}
+                        <div class="mb-3">
+                            {{ field.label_tag }}{% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="alert alert-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    <h4 class="mt-4">Изображения</h4>
+                    <div id="image-formset-container">
+                        {{ image_formset.management_form }}
+                        <!-- Пустой контейнер для динамически добавляемых форм -->
+                    </div>
+                    <div id="add-image-buttons">
+                        <button type="button" class="btn btn-info btn-sm mt-3" id="add-first-image">Добавить изображения</button>
+                        <button type="button" class="btn btn-info btn-sm mt-3 d-none" id="add-more-images">Добавить еще изображения</button>
+                    </div>
+
+                    {% if form.non_field_errors %}
+                        {% for error in form.non_field_errors %}
+                            <div class="alert alert-danger">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if image_formset.non_form_errors %}
+                        {% for error in image_formset.non_form_errors %}
+                            <div class="alert alert-danger">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <span class="text-danger">*</span> - обязательные поля
+                        </small>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                        <a href="{% url 'ads:ads_list' %}" class="btn btn-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const formsetContainer = document.getElementById('image-formset-container');
+        const addFirstImageBtn = document.getElementById('add-first-image');
+        const addMoreImagesBtn = document.getElementById('add-more-images');
+        const totalForms = document.getElementById('id_images-TOTAL_FORMS');
+        const emptyFormHtml = document.getElementById('empty-form-template').innerHTML;
+
+        // Show first image form when "Add Images" button is clicked
+        addFirstImageBtn.addEventListener('click', function() {
+            const formIdx = totalForms.value;
+            const newFormHtml = emptyFormHtml.replace(/__prefix__/g, formIdx);
+            const newFormDiv = document.createElement('div');
+            newFormDiv.innerHTML = newFormHtml;
+            formsetContainer.appendChild(newFormDiv);
+
+            totalForms.value = parseInt(totalForms.value) + 1;
+
+            const newFormElement = newFormDiv.querySelector('.image-form');
+            applyCheckboxClasses(newFormElement);
+            attachRemoveListener(newFormElement);
+            attachIsMainListener(newFormElement);
+            updateButtonVisibility();
+        });
+
+        // Add more images
+        addMoreImagesBtn.addEventListener('click', function() {
+            const formIdx = totalForms.value;
+            const newFormHtml = emptyFormHtml.replace(/__prefix__/g, formIdx);
+            const newFormDiv = document.createElement('div');
+            newFormDiv.innerHTML = newFormHtml;
+            formsetContainer.appendChild(newFormDiv);
+
+            totalForms.value = parseInt(totalForms.value) + 1;
+
+            const newFormElement = newFormDiv.querySelector('.image-form');
+            applyCheckboxClasses(newFormElement);
+            attachRemoveListener(newFormElement);
+            attachIsMainListener(newFormElement);
+            updateButtonVisibility();
+        });
+
+        function applyCheckboxClasses(formElement) {
+            formElement.querySelectorAll('input[type="checkbox"][id$="-is_main"]').forEach(checkbox => {
+                checkbox.classList.add('form-check-input');
+            });
+        }
+
+        function attachRemoveListener(formElement) {
+            formElement.querySelector('.remove-image-form').addEventListener('click', removeForm);
+        }
+
+        function attachIsMainListener(formElement) {
+            formElement.querySelectorAll('input[type="checkbox"][id$="-is_main"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        formsetContainer.querySelectorAll('input[type="checkbox"][id$="-is_main"]').forEach(otherCheckbox => {
+                            if (otherCheckbox !== this) {
+                                otherCheckbox.checked = false;
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
+        function removeForm(event) {
+            event.target.closest('.image-form').remove();
+            totalForms.value = parseInt(totalForms.value) - 1;
+            updateFormIndices();
+            updateButtonVisibility();
+        }
+
+        function updateFormIndices() {
+            formsetContainer.querySelectorAll('.image-form').forEach((form, index) => {
+                form.querySelectorAll('input, select, textarea').forEach(element => {
+                    const name = element.name;
+                    if (name) {
+                        element.name = name.replace(/-\d+-/, `-${index}-`);
+                        element.id = element.id.replace(/-\d+-/, `-${index}-`);
+                    }
+                });
+            });
+        }
+
+        // Update button visibility based on number of forms
+        function updateButtonVisibility() {
+            const formCount = formsetContainer.querySelectorAll('.image-form').length;
+            if (formCount === 0) {
+                addFirstImageBtn.style.display = 'block';
+                addMoreImagesBtn.classList.add('d-none');
+            } else {
+                addFirstImageBtn.style.display = 'none';
+                addMoreImagesBtn.classList.remove('d-none');
+            }
+        }
+
+        // Initial button visibility
+        updateButtonVisibility();
+    });
+</script>
+<div id="empty-form-template" style="display: none;">
+    <div class="image-form mb-3 p-3 border rounded additional-image">
+        {% for hidden_field in empty_image_form.hidden_fields %}
+            {{ hidden_field }}
+        {% endfor %}
+        <div class="mb-3">
+            {{ empty_image_form.image.label_tag }}
+            {{ empty_image_form.image }}
+            {% if empty_image_form.image.help_text %}
+                <div class="form-text">{{ empty_image_form.image.help_text }}</div>
+            {% endif %}
+            {% for error in empty_image_form.image.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="form-check mb-3">
+            {{ empty_image_form.is_main }}
+            <label class="form-check-label" for="{{ empty_image_form.is_main.id_for_label }}">Сделать основным</label>
+            {% for error in empty_image_form.is_main.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <div class="mb-3">
+            {{ empty_image_form.order.label_tag }}
+            {{ empty_image_form.order }}
+            {% if empty_image_form.order.help_text %}
+                <div class="form-text">{{ empty_image_form.order.help_text }}</div>
+            {% endif %}
+            {% for error in empty_image_form.order.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+        <button type="button" class="btn btn-danger btn-sm remove-image-form mt-2">Удалить</button>
+    </div>
+</div>
+{% endblock %}
+{% endblock %}

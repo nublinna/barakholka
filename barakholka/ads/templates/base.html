@@ -251,6 +251,13 @@
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                             <li><a class="dropdown-item" href="{% url 'ads:ads_list' %}"><i class="bi bi-view-list me-2"></i> Все объявления</a></li>
                             {% if user.is_authenticated %}
+                            <li><a class="dropdown-item" href="{% url 'ads:my_ads' %}"><i class="bi bi-card-text me-2"></i> Мои объявления</a></li>
+                            <li><a class="dropdown-item" href="{% url 'ads:favorites_list' %}"><i class="bi bi-heart me-2"></i> Избранное</a></li>
+                            <li><a class="dropdown-item" href="{% url 'chat:chat_list' %}"><i class="bi bi-chat me-2"></i> Мои чаты</a></li>
+                            {% if user.is_staff %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'ads:site_statistics' %}"><i class="bi bi-bar-chart me-2"></i> Статистика</a></li>
+                            {% endif %}
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form action="{% url 'user:logout' %}" method="post">
@@ -267,8 +274,6 @@
                             {% endif %}
                         </ul>
                     </li>
-
-
                 </ul>
             </div>
         </div>
@@ -290,8 +295,8 @@
     <!-- Основной контент -->
     <main class="main-content">
         <div class="container mt-4">
-            <!-- Сообщения -->
-            {% if messages %}
+            <!-- Сообщения (не показываем в чате) -->
+            {% if messages and 'chat' not in request.resolver_match.app_name %}
             <div class="messages-container">
                 {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -372,10 +377,11 @@
 
     <!-- Пользовательские скрипты -->
     <script>
-        // Автоматическое скрытие сообщений через 5 секунд
+        // Автоматическое скрытие только информационных сообщений через 5 секунд
         $(document).ready(function() {
+            // Скрываем только success и info сообщения, оставляем error и warning видимыми
             setTimeout(function() {
-                $('.alert').alert('close');
+                $('.alert-success, .alert-info').alert('close');
             }, 5000);
 
             // Подтверждение действий

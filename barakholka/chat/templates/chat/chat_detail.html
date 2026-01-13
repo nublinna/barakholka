@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if chat_room.ad %}
+        Чат по объявлению "{{ chat_room.ad.title|truncatechars:50 }}" - Доска объявлений
+    {% else %}
+        Общий чат - Доска объявлений
+    {% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if chat_room.ad %}
+        Чат по объявлению: {{ chat_room.ad.title|truncatechars:50 }}
+    {% else %}
+        Общий чат с поддержкой
+    {% endif %}
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'ads:ads_list' %}">Главная</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'chat:chat_list' %}">Мои чаты</a></li>
+        <li class="breadcrumb-item active" aria-current="page">
+            {% if chat_room.ad %}
+                Чат по объявлению
+            {% else %}
+                Общий чат
+            {% endif %}
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        height: 600px;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e8e8e8;
+        overflow: hidden;
+    }
+
+    .chat-header {
+        background: var(--avito-blue);
+        color: white;
+        padding: 15px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background: #f8f9fa;
+    }
+
+    .message {
+        margin-bottom: 15px;
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .message-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--avito-blue);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    .message-content {
+        background: white;
+        padding: 12px 16px;
+        border-radius: 18px;
+        max-width: 70%;
+        word-wrap: break-word;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .message.own .message-content {
+        background: var(--avito-blue);
+        color: white;
+        margin-left: auto;
+        margin-right: 12px;
+    }
+
+    .message.own .message-avatar {
+        order: 2;
+        margin-left: 12px;
+        margin-right: 0;
+    }
+
+    .message-info {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 4px;
+    }
+
+    .message.own .message-info {
+        text-align: right;
+        color: rgba(255,255,255,0.7);
+    }
+
+    .chat-input-area {
+        border-top: 1px solid #e8e8e8;
+        background: white;
+        padding: 20px;
+    }
+
+    .no-messages {
+        text-align: center;
+        color: #666;
+        padding: 40px 20px;
+    }
+
+    .no-messages i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+
+    .ad-info {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid #e8e8e8;
+    }
+
+    .ad-info h6 {
+        margin-bottom: 10px;
+        color: var(--avito-blue);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Информация об объявлении -->
+        {% if chat_room.ad %}
+        <div class="ad-info">
+            <h6><i class="bi bi-info-circle"></i> Информация об объявлении</h6>
+            <div class="row">
+                <div class="col-md-8">
+                    <h5 class="mb-1">
+                        <a href="{% url 'ads:ads_detail' chat_room.ad.id %}" class="text-decoration-none">
+                            {{ chat_room.ad.title }}
+                        </a>
+                    </h5>
+                    <p class="mb-1">{{ chat_room.ad.description|truncatechars:100 }}</p>
+                    <p class="mb-0 text-muted">
+                        <i class="bi bi-geo-alt"></i> {{ chat_room.ad.address }} •
+                        <i class="bi bi-tag"></i> {{ chat_room.ad.category }}
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="ad-price mb-2">{{ chat_room.ad.price }} ₽</div>
+                    <small class="text-muted">
+                        {% if chat_room.ad.available %}
+                            <span class="badge bg-success">Доступно</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Продано</span>
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Чат -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        {% if request.user == chat_room.buyer %}
+                            <h6 class="mb-0">Чат с продавцом: {{ chat_room.seller.username }}</h6>
+                        {% else %}
+                            <h6 class="mb-0">Чат с покупателем: {{ chat_room.buyer.username }}</h6>
+                        {% endif %}
+                        <small class="opacity-75">
+                            {% if chat_room.ad %}
+                                По объявлению "{{ chat_room.ad.title|truncatechars:30 }}"
+                            {% else %}
+                                Общий чат с поддержкой
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="text-end">
+                        <small class="opacity-75">
+                            Создан: {{ chat_room.created_at|date:"d.m.Y H:i" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="messages-container">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="message {% if message.sender == request.user %}own{% endif %}" id="message-{{ message.id }}">
+                        <div class="message-avatar">
+                            {{ message.sender.username|first|upper }}
+                        </div>
+                        <div class="message-content">
+                            <div>{{ message.content|linebreaks }}</div>
+                            <div class="message-info">
+                                {{ message.timestamp|date:"d.m.Y H:i" }}
+                                {% if message.sender == request.user %}
+                                    {% if message.is_read %}
+                                        <i class="bi bi-check2-all text-success"></i>
+                                    {% else %}
+                                        <i class="bi bi-check2"></i>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-messages">
+                        <i class="bi bi-chat-dots"></i>
+                        <h5>Начните общение</h5>
+                        <p>Отправьте первое сообщение в этом чате</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="chat-input-area">
+                <form method="post" id="message-form">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <textarea
+                            name="content"
+                            class="form-control"
+                            rows="2"
+                            placeholder="Введите ваше сообщение..."
+                            maxlength="1000"
+                            required
+                        ></textarea>
+                        <button type="submit" class="btn btn-avito">
+                            <i class="bi bi-send"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted mt-1 d-block">
+                        Максимум 1000 символов. Нажмите Enter для отправки.
+                    </small>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Информация о собеседнике -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    {% if request.user == chat_room.buyer %}
+                        Информация о продавце
+                    {% else %}
+                        Информация о покупателе
+                    {% endif %}
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if request.user == chat_room.buyer %}
+                    <div class="text-center mb-3">
+                        <div class="message-avatar mx-auto" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                            {{ chat_room.seller.username|first|upper }}
+                        </div>
+                        <h6 class="mt-2">{{ chat_room.seller.username }}</h6>
+                        <small class="text-muted">Продавец</small>
+                    </div>
+                {% else %}
+                    <div class="text-center mb-3">
+                        <div class="message-avatar mx-auto" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                            {{ chat_room.buyer.username|first|upper }}
+                        </div>
+                        <h6 class="mt-2">{{ chat_room.buyer.username }}</h6>
+                        <small class="text-muted">Покупатель</small>
+                    </div>
+                {% endif %}
+
+                <hr>
+
+                <div class="small text-muted">
+                    <p><i class="bi bi-calendar"></i> Чат создан: {{ chat_room.created_at|date:"d.m.Y H:i" }}</p>
+                    <p><i class="bi bi-chat"></i> Всего сообщений: {{ messages|length }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Быстрые действия -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Действия</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if chat_room.ad %}
+                        <a href="{% url 'ads:ads_detail' chat_room.ad.id %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye"></i> Посмотреть объявление
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'chat:chat_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Все чаты
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Автопрокрутка к последнему сообщению
+    const messagesContainer = $('#messages-container');
+    messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+
+    // Отправка формы по Ctrl+Enter
+    $('textarea[name="content"]').on('keydown', function(e) {
+        if (e.ctrlKey && e.keyCode === 13) {
+            e.preventDefault();
+            $('#message-form').submit();
+        }
+    });
+
+    // AJAX отправка сообщений (опционально, если нужно)
+    $('#message-form').on('submit', function(e) {
+        // Для обычной отправки формы - ничего не делаем, форма отправится стандартно
+        // Для AJAX можно добавить дополнительную логику здесь
+    });
+
+    // Автоматическая проверка новых сообщений отключена для чистоты интерфейса
+    // Пользователь может обновлять страницу вручную для проверки новых сообщений
+});
+</script>
+{% endblock %}

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'ads.apps.AdsConfig',
     'user.apps.UserConfig',
+    'chat'
 ]
 
 MIDDLEWARE = [

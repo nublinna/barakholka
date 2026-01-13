@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои объявления - Доска объявлений{% endblock %}
+
+{% block page_title %}Мои объявления{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'ads:ads_list' %}">Главная</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Мои объявления</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Заголовок и кнопка создания -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">Мои объявления</h4>
+            <a href="{% url 'ads:ad_create' %}" class="btn btn-avito">
+                <i class="bi bi-plus-circle"></i> Создать объявление
+            </a>
+        </div>
+
+        {% if user_ads %}
+            <div class="row">
+                {% for ad in user_ads %}
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="ad-card h-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-start mb-3">
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title mb-1">
+                                        <a href="{% url 'ads:ads_detail' ad.id %}" class="text-decoration-none">
+                                            {{ ad.title|truncatechars:50 }}
+                                        </a>
+                                    </h5>
+                                    <p class="text-muted small mb-2">
+                                        <i class="bi bi-tag"></i> {{ ad.category }} • {{ ad.price }} ₽
+                                    </p>
+                                    <p class="text-muted small mb-2">
+                                        Создано: {{ ad.created_at|date:"d.m.Y H:i" }}
+                                    </p>
+
+                                    <!-- Статус объявления -->
+                                    <div class="mb-2">
+                                        {% if ad.available %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i> Активно
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="bi bi-x-circle"></i> Снято с продажи
+                                            </span>
+                                        {% endif %}
+
+                                        <!-- Состояние товара -->
+                                        <span class="badge bg-{% if ad.type == 'new' %}info{% else %}warning{% endif %} ms-1">
+                                            {{ ad.get_type_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <!-- Статистика объявления -->
+                                    <small class="text-muted">
+                                        <i class="bi bi-chat"></i> {{ ad.chats.count }} чатов
+                                        <i class="bi bi-heart ms-2"></i> {{ ad.favorites.count }} в избранном
+                                    </small>
+
+                                    <!-- Кнопки действий -->
+                                    <div>
+                                        <a href="{% url 'ads:ads_detail' ad.id %}" class="btn btn-avito-outline btn-sm">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if ad.available %}
+                                            <a href="{% url 'ads:ad_edit' ad.id %}" class="btn btn-outline-primary btn-sm ms-1">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'ads:ad_delete' ad.id %}" class="btn btn-outline-danger btn-sm ms-1">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted small ms-1" title="Объявление снято с продажи">
+                                                <i class="bi bi-lock"></i>
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Нет объявлений -->
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-card-text" style="font-size: 4rem; color: var(--avito-dark-gray);"></i>
+                </div>
+                <h4 class="text-muted mb-3">У вас пока нет объявлений</h4>
+                <p class="text-muted mb-4">
+                    Создайте свое первое объявление и начните продавать!
+                </p>
+                <a href="{% url 'ads:ad_create' %}" class="btn btn-avito">
+                    <i class="bi bi-plus-circle"></i> Создать объявление
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
