@@ -99,7 +99,6 @@ class Favorite(models.Model):
 
 
 class SiteStatistics(models.Model):
-    """Статистика сайта"""
     # Объявления
     total_ads = models.PositiveIntegerField(default=0, verbose_name='Всего объявлений')
     active_ads = models.PositiveIntegerField(default=0, verbose_name='Активных объявлений')
@@ -126,12 +125,10 @@ class SiteStatistics(models.Model):
 
     @classmethod
     def get_current_stats(cls):
-        """Получить текущую статистику"""
         stats, created = cls.objects.get_or_create(pk=1)
         return stats
 
     def update_stats(self):
-        """Обновить статистику"""
         from chat.models import ChatRoom, Message
         from django.contrib.auth import get_user_model
 

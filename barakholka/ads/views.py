@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from ads.models import Ads, Favorite, SiteStatistics
 from django.contrib.auth.decorators import login_required
 from ads.forms import AdsForm, AdsImageFormSet
+from django.db.models import Count
+from chat.models import ChatRoom, Message
 
 
 def ads_list(request):
@@ -32,7 +34,6 @@ def ad_create(request):
             if request.user.is_authenticated:
                 ad.seller = request.user
             else:
-                # Это не должно происходить из-за @login_required, но на всякий случай
                 messages.error(request, 'Необходимо войти в систему для создания объявления.')
                 return redirect("user:login")
             ad.save()
@@ -43,7 +44,6 @@ def ad_create(request):
             messages.success(request, f'Объявление "{ad.title}" успешно создано!')
             return redirect("ads:ads_list")
         else:
-            # Более детальная обработка ошибок
             error_messages = []
             if not form.is_valid():
                 error_messages.append("Ошибки в основных данных объявления:")
@@ -85,7 +85,6 @@ def ad_edit(request, ad_id):
             messages.success(request, 'Объявление успешно обновлено!')
             return redirect("ads:ads_detail", ad_id=ad_id)
         else:
-            # Более детальная обработка ошибок
             error_messages = []
             if not form.is_valid():
                 error_messages.append("Ошибки в основных данных объявления:")
@@ -121,7 +120,7 @@ def ad_delete(request, ad_id):
     ad = get_object_or_404(Ads, id=ad_id, seller=request.user)
 
     if request.method == "POST":
-        ad_title = ad.title  # Сохраняем название для сообщения
+        ad_title = ad.title
         ad.delete()
         messages.success(request, f'Объявление "{ad_title}" успешно удалено!')
         return redirect("ads:ads_list")
@@ -130,10 +129,8 @@ def ad_delete(request, ad_id):
 
 @login_required
 def add_to_favorites(request, ad_id):
-    """Добавление товара в избранное"""
     ad = get_object_or_404(Ads, id=ad_id)
 
-    # Проверяем, что пользователь не пытается добавить свой же товар
     if request.user == ad.seller:
         messages.warning(request, 'Нельзя добавить в избранное свой собственный товар.')
         return redirect('ads:ads_detail', ad_id=ad_id)
@@ -153,7 +150,6 @@ def add_to_favorites(request, ad_id):
 
 @login_required
 def remove_from_favorites(request, ad_id):
-    """Удаление товара из избранного"""
     ad = get_object_or_404(Ads, id=ad_id)
 
     try:
@@ -163,14 +159,12 @@ def remove_from_favorites(request, ad_id):
     except Favorite.DoesNotExist:
         messages.warning(request, 'Этот товар не был в избранном.')
 
-    # Определяем, откуда пришел запрос
     next_url = request.GET.get('next', 'ads:favorites_list')
     return redirect(next_url)
 
 
 @login_required
 def favorites_list(request):
-    """Страница с избранными товарами"""
     favorites = Favorite.objects.filter(user=request.user).select_related('ad', 'ad__seller')
 
     context = {
@@ -178,7 +172,7 @@ def favorites_list(request):
         'favorites_count': favorites.count(),
     }
 
-    return render(request, 'ads/favorites.html', context)
+    return render(request, 'favorites.html', context)
 
 @login_required
 def add_to_favorites(request, ad_id):
@@ -210,7 +204,6 @@ def remove_from_favorites(request, ad_id):
     except Favorite.DoesNotExist:
         messages.warning(request, "Этот товар не был в избранном")
 
-    # Определяем, откуда пришел запрос
     next_url = request.GET.get('next', 'ads:favorites_list')
     return redirect(next_url)
 
@@ -239,10 +232,6 @@ def site_statistics(request):
     # Обновляем статистику перед показом
     stats.update_stats()
 
-    # Дополнительная статистика по пользователям
-    from django.db.models import Count
-    from chat.models import ChatRoom, Message
-
     # Топ пользователей по количеству объявлений
     top_users_by_ads = Ads.objects.values('seller__username').annotate(
         ads_count=Count('id')
@@ -267,17 +256,16 @@ def site_statistics(request):
         'active_ads_percentage': active_ads_percentage,
     }
 
-    return render(request, 'ads/statistics.html', context)
+    return render(request, 'statistics.html', context)
 
 
 @login_required
 def my_ads(request):
-    """Показать все объявления текущего пользователя (включая неактивные)"""
     user_ads = Ads.objects.filter(seller=request.user).select_related('seller').order_by('-created_at')
 
     context = {
         'user_ads': user_ads,
     }
 
-    return render(request, 'ads/my_ads.html', context)
+    return render(request, 'my_ads.html', context)
 

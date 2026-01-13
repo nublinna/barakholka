@@ -3,7 +3,6 @@ from django.conf import settings
 
 
 class ChatRoom(models.Model):
-    """Комната чата между покупателем и продавцом"""
     ad = models.ForeignKey(
         'ads.Ads',
         on_delete=models.CASCADE,
@@ -29,7 +28,7 @@ class ChatRoom(models.Model):
     is_active = models.BooleanField(default=True, verbose_name="Активен")
 
     class Meta:
-        unique_together = ['buyer', 'seller', 'ad']  # уникальный чат для пары пользователь-продавец по объявлению
+        unique_together = ['buyer', 'seller', 'ad']
         ordering = ['-created_at']
 
     def __str__(self):
@@ -39,7 +38,6 @@ class ChatRoom(models.Model):
 
 
 class Message(models.Model):
-    """Сообщение в чате"""
     chat_room = models.ForeignKey(
         ChatRoom,
         on_delete=models.CASCADE,
